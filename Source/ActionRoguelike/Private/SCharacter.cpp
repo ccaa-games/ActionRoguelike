@@ -7,6 +7,7 @@
 #include <DrawDebugHelpers.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include "GameFramework/Character.h"
+#include "SInteractionComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -20,6 +21,8 @@ ASCharacter::ASCharacter()
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
+
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>(TEXT("InteractionComp"));
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
@@ -58,6 +61,21 @@ void ASCharacter::MoveRight(float Value)
 }
 
 void ASCharacter::PrimaryAttack()
+{
+	PlayAnimMontage(AttackAnim);
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed,.2f);
+
+}
+
+
+void ASCharacter::PrimaryInteract()
+{
+	InteractionComp->PrimaryInteract();
+}
+
+
+void ASCharacter::PrimaryAttack_TimeElapsed()
 {
 	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 
@@ -106,4 +124,6 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("PrimaryAttack",EInputEvent::IE_Pressed, this, &ASCharacter::PrimaryAttack);
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Released, this, &ACharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("PrimaryInteract", EInputEvent::IE_Pressed, this, &ASCharacter::PrimaryInteract);
 }
